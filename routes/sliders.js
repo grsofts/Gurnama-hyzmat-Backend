@@ -1,16 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const sliderController = require('../controllers/services');
+const sliderController = require('../controllers/sliders');
 const verify = require('../middleware/verify');
 const multer = require('../middleware/uploadSlider');
+const validateSliderImages = require('../middleware/validateSliderImages');
 
-router.get('/sliders', verify, serviceController.getServices);
-router.get('/sliders/:id', serviceController.getServices);
-router.post('/add_service', 
+router.get('/sliders', verify, sliderController.getSliders);
+router.get('/sliders/:id', sliderController.getSliders);
+router.post('/add_slider', 
     multer.fields([{name:'image_tm', maxCount: 1 }, {name:'image_ru', maxCount: 1 }, {name:'image_en', maxCount: 1 }]), 
-    serviceController.addService);
-router.put('/update_service/:id', 
+    validateSliderImages,
+    sliderController.addSlider);
+
+
+router.put('/update_slider/:id', 
     multer.fields([{name:'image_tm', maxCount: 1 }, {name:'image_ru', maxCount: 1 }, {name:'image_en', maxCount: 1 }]),
-    serviceController.updateService);
+    sliderController.updateSlider);
 
 module.exports = router;

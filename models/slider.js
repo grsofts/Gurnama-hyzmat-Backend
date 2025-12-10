@@ -4,6 +4,8 @@ module.exports = (sequelize) => {
   const Slider = sequelize.define('Slider', {
       is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
       sort_order: { type: DataTypes.INTEGER, defaultValue: 0 },
+      link: { type: DataTypes.STRING, allowNull: true },
+      isCustomLink: { type: DataTypes.BOOLEAN, defaultValue: false }
   }, {
     tableName: 'sliders'
   });

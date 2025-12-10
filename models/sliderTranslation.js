@@ -6,9 +6,7 @@ module.exports = (sequelize) => {
     name : { type: DataTypes.STRING(150), allowNull:false },
     title: { type: DataTypes.STRING(255), allowNull: false },
     desc: { type: DataTypes.TEXT, allowNull: true },
-    image: { type: DataTypes.STRING, allowNull: true },
-    link: { type: DataTypes.STRING, allowNull: true },
-    isCustomLink: { type: DataTypes.BOOLEAN, defaultValue: false }
+    image: { type: DataTypes.STRING, allowNull: true }
   }, {
     tableName: 'sliders_translations'
   });

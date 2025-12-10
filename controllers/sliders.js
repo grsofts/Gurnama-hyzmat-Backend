@@ -3,8 +3,8 @@ const models = require('../models');
 const fs = require('fs');
 const path = require('path');
 
-const serviceController = {
-  getServices: async (req, res) => {
+const sliderController = {
+  getSliders: async (req, res) => {
     try {
         // ?lang=ru или default 'ru'
         const lang = req.query.lang || 'ru';
@@ -12,11 +12,11 @@ const serviceController = {
         const languageId = language ? language.id : 1;
         const id = req.params.id;
 
-        const services = await models.Service.findAll({
+        const sliders = await models.Slider.findAll({
           order: [['sort_order', 'ASC']],
           where: id ? { id: id } : {},
           include: [{
-              model: models.ServiceTranslation,
+              model: models.SliderTranslation,
               as: 'translations',
               where: { language_id: languageId },
               required: false
@@ -24,15 +24,16 @@ const serviceController = {
         });
 
         // map: вернуть удобный объект с translation
-        const result = services.map(s => {
+        const result = sliders.map(s => {
           const t = s.translations && s.translations[0];
+          
           return {
               id: s.id,
-              image: s.image,
-              icon: s.icon,
               sort_order: s.sort_order,
+              name: t ? t.name : null,
               title: t ? t.title : null,
-              short_desc: t ? t.short_desc : null
+              desc: t ? t.desc : null,
+              image: t.image,
           };
         });
 
@@ -42,7 +43,7 @@ const serviceController = {
         res.status(500).json({ error: 'Server error' });
     }
   },
-  addService: async (req, res) => {
+  addSlider: async (req, res) => {
     try {
       // 1. Парсим JSON
       if (!req.body.data) {
@@ -51,10 +52,12 @@ const serviceController = {
 
       const data = JSON.parse(req.body.data);
 
-      // 2. Создаем Service
-      const service = await models.Service.create({
+      // 2. Создаем Slider
+      const slider = await models.Slider.create({
         sort_order: data.sort_order,
-        is_active: data.is_active
+        is_active: data.is_active,
+        link: data.link,
+        is_custom_link: data.is_custom_link
       });
 
       // 3. Файлы по языкам
@@ -75,30 +78,30 @@ const serviceController = {
         const savedImages = [];
 
         for (const file of mapLang[lang]) {
-          const newPath = path.join(__dirname, "../uploads/services", file.filename);
+          const newPath = path.join(__dirname, "../uploads/sliders", file.filename);
           fs.renameSync(file.path, newPath);
 
-          savedImages.push(`/uploads/services/${file.filename}`);
+          savedImages.push(`/uploads/sliders/${file.filename}`);
         }
 
-        await models.ServiceTranslation.create({
-          service_id: service.id,
+        await models.SliderTranslation.create({
+          slider_id: slider.id,
           language_id: langRow.id,
+          name: tr.name,
           title: tr.title,
-          short_desc: tr.short_desc,
-          full_desc: tr.full_desc,
-          image: files[`image_${lang}`]?.[0]?.filename ? 'services/' + files[`image_${lang}`]?.[0]?.filename : null
+          desc: tr.desc,
+          image: files[`image_${lang}`]?.[0]?.filename ? '/sliders/' + files[`image_${lang}`]?.[0]?.filename : null
         });
       }
 
-      return res.json({ message: "Service created", id: service.id });
+      return res.json({ message: "Slider created", id: slider.id });
 
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Server error" });
     }
   },
-  updateService: async (req, res) => {
+  updateSlider: async (req, res) => {
     try {
       const serviceId = req.params.id;
 
@@ -159,7 +162,7 @@ const serviceController = {
           const file = mapLang[lang][0];
           const newPath = path.join(__dirname, "../uploads/services", file.filename);
           fs.renameSync(file.path, newPath);
-          await translation.update({ image: `services/${file.filename}` });
+          await translation.update({ image: `/services/${file.filename}` });
         }
       }
 
@@ -169,6 +172,40 @@ const serviceController = {
       console.error(err);
       res.status(500).json({ error: 'Server error' });
     }
+  },
+  deleteSlider: async (req, res) => {
+    try {
+      const serviceId = req.params.id;
+
+      // 2. Находим существующую услугу
+      const service = await models.Service.findByPk(serviceId, {
+        include: [{ model: models.ServiceTranslation, as: 'translations' }]
+      });
+
+      if (!service) return res.status(404).json({ message: 'Service not found' });
+
+      // 2. Удаляем изображения переводов
+      for (const tr of service.translations) {
+        if (tr.image) {
+          const filePath = path.join(__dirname, "../uploads/", tr.image);
+
+          // убираем ведущий "/" если есть
+          const cleanPath = filePath.replace("/uploads/", "");
+
+          if (fs.existsSync(cleanPath)) {
+            fs.unlinkSync(cleanPath); // удаляем картинку
+          }
+        }
+      }
+
+      // 3. Удаляем саму услугу (все переводы удалятся из-за CASCADE)
+      await service.destroy();
+
+      res.json({ message: 'Service deleted' });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
   }
 };
-module.exports = serviceController;
+module.exports = sliderController;
