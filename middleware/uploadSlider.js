@@ -1,5 +1,14 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+
+// Папка куда сохраняем
+const uploadDir = path.join(__dirname, '../uploads/sliders');
+
+// Если нет — создаём
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Настраиваем storage для multer
 const storage = multer.diskStorage({

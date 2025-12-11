@@ -45,8 +45,28 @@ const sliderController = {
   },
   addSlider: async (req, res) => {
     try {
+      //checking all images requirement
+      if (!req.files || !req.files.image_tm || !req.files.image_ru || !req.files.image_en) {
+        //remove if exists 2 files is uploaded
+        if (req.files) {
+          Object.keys(req.files).forEach(key => {
+            req.files[key].forEach(file => {
+              fs.unlinkSync(file.path);
+            });
+          });
+        }
+        return res.status(400).json({ message: "All images (tm, ru, en) are required." });
+      }
+
       // 1. Парсим JSON
       if (!req.body.data) {
+        if (req.files) {
+          Object.keys(req.files).forEach(key => {
+            req.files[key].forEach(file => {
+              fs.unlinkSync(file.path);
+            });
+          });
+        }
         return res.status(400).json({ message: "Missing 'data' JSON field" });
       }
 
@@ -103,7 +123,7 @@ const sliderController = {
   },
   updateSlider: async (req, res) => {
     try {
-      const serviceId = req.params.id;
+      const sliderId = req.params.id;
 
       // 1. Проверяем, что есть JSON с данными
       if (!req.body.data) {
@@ -113,15 +133,17 @@ const sliderController = {
       const data = JSON.parse(req.body.data);
 
       // 2. Находим существующую услугу
-      const service = await models.Service.findByPk(serviceId, {
-        include: [{ model: models.ServiceTranslation, as: 'translations' }]
+      const slider = await models.Slider.findByPk(sliderId, {
+        include: [{ model: models.SliderTranslation, as: 'translations' }]
       });
 
-      if (!service) return res.status(404).json({ message: 'Service not found' });
+      if (!slider) return res.status(404).json({ message: 'Slider not found' });
 
       // 3. Обновляем основные поля
-      await service.update({
+      await slider.update({
         sort_order: data.sort_order,
+        link: data.link,
+        is_custom_link: data.is_custom_link,
         is_active: data.is_active
       });
 
@@ -139,34 +161,34 @@ const sliderController = {
         if (!tr) continue;
 
         // Находим существующий перевод
-        let translation = service.translations.find(t => t.language_id === langRow.id);
+        let translation = slider.translations.find(t => t.language_id === langRow.id);
         if (!translation) {
-          translation = await models.ServiceTranslation.create({
-            service_id: service.id,
+          translation = await models.SliderTranslation.create({
+            slider_id: slider.id,
             language_id: langRow.id,
+            name: tr.name,
             title: tr.title,
-            short_desc: tr.short_desc,
-            full_desc: tr.full_desc,
+            desc: tr.desc,
             image: null
           });
         } else {
           await translation.update({
+            name: tr.name,
             title: tr.title,
-            short_desc: tr.short_desc,
-            full_desc: tr.full_desc
-          });
+            desc: tr.desc,
+            });
         }
 
         // Если есть новый файл — сохраняем
         if (mapLang[lang].length > 0) {
           const file = mapLang[lang][0];
-          const newPath = path.join(__dirname, "../uploads/services", file.filename);
+          const newPath = path.join(__dirname, "../uploads/sliders", file.filename);
           fs.renameSync(file.path, newPath);
-          await translation.update({ image: `/services/${file.filename}` });
+          await translation.update({ image: `/sliders/${file.filename}` });
         }
       }
 
-      res.json({ message: 'Service updated' });
+      res.json({ message: 'Slider updated' });
 
     } catch (err) {
       console.error(err);
@@ -175,17 +197,17 @@ const sliderController = {
   },
   deleteSlider: async (req, res) => {
     try {
-      const serviceId = req.params.id;
+      const sliderId = req.params.id;
 
-      // 2. Находим существующую услугу
-      const service = await models.Service.findByPk(serviceId, {
-        include: [{ model: models.ServiceTranslation, as: 'translations' }]
+      // 2. Находим существующий слайдер
+      const slider = await models.Slider.findByPk(sliderId, {
+        include: [{ model: models.SliderTranslation, as: 'translations' }]
       });
 
-      if (!service) return res.status(404).json({ message: 'Service not found' });
+      if (!slider) return res.status(404).json({ message: 'Slider not found' });
 
       // 2. Удаляем изображения переводов
-      for (const tr of service.translations) {
+      for (const tr of slider.translations) {
         if (tr.image) {
           const filePath = path.join(__dirname, "../uploads/", tr.image);
 
@@ -198,10 +220,10 @@ const sliderController = {
         }
       }
 
-      // 3. Удаляем саму услугу (все переводы удалятся из-за CASCADE)
-      await service.destroy();
+      // 3. Удаляем сам слайдер (все переводы удалятся из-за CASCADE)
+      await slider.destroy();
 
-      res.json({ message: 'Service deleted' });
+      res.json({ message: 'Slider deleted' });
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Server error' });
