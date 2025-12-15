@@ -2,6 +2,7 @@
 const models = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { where } = require('sequelize');
 
 const authController = {
   Login: async (req, res) => {
@@ -30,20 +31,33 @@ const authController = {
         { expiresIn: "30d" }
       );
 
+      //hash refresh token перед сохранением в базу
+      const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+
       // Сохраняем refresh token в базе
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 30);
 
+      await models.RefreshToken.destroy({ where: { user_id: user.id } });
+
       await models.RefreshToken.create({
-        token: refreshToken,
+        token: hashedRefreshToken,
         user_id: user.id,
         expires_at: expiresAt
+      });
+
+      // ставим refresh token в httpOnly cookie maxAge = expiresAt
+      res.cookie("refresh_token", refreshToken, {
+        httpOnly: true,
+        secure: false, // true в продакшене HTTPS
+        sameSite: "lax",
+        path: "/api/refresh",
+        maxAge: 30 * 24 * 60 * 60 * 1000
       });
 
       return res.json({
         message: "Успешный вход",
         accessToken,
-        refreshToken,
         user: { id: user.id, username: user.username, role: user.role }
       });
 
@@ -85,22 +99,29 @@ const authController = {
   },
   Refresh: async (req, res) => {
     try {
-      const { refreshToken } = req.body;
+      const refreshToken = req.cookies.refresh_token;
+      
       if (!refreshToken) return res.status(400).json({ message: "Refresh token обязателен" });
 
       // Проверяем в базе
-      const tokenEntry = await models.RefreshToken.findOne({ where: { token: refreshToken } });
+      const tokenEntry = await models.RefreshToken.findAll();
       if (!tokenEntry) return res.status(401).json({ message: "Неверный refresh token" });
 
-      // Проверяем подпись
-      let payload;
-      try {
-        payload = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
-      } catch {
+      let matchedToken = null;
+      for (const t of tokenEntry) {
+        if (await bcrypt.compare(refreshToken, t.token)) {
+          matchedToken = t;
+          break;
+        }
+      }
+
+      if (!matchedToken) {
+        // reuse detection или ошибка
         return res.status(401).json({ message: "Неверный или просроченный refresh token" });
       }
 
-      const user = await models.User.findByPk(payload.id);
+      const user = await models.User.findByPk(matchedToken.user_id);
+      
       if (!user) return res.status(404).json({ message: "Пользователь не найден" });
 
       // Генерируем новый access token
