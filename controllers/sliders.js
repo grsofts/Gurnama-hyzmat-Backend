@@ -34,6 +34,11 @@ const sliderController = {
               title: t ? t.title : null,
               desc: t ? t.desc : null,
               image: t.image,
+              link: s.link,
+              is_custom_link: s.isCustomLink,
+              is_active: s.is_active,
+              createdAt: s.createdAt,
+              updatedAt: s.updatedAt
           };
         });
 

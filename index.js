@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors');
 const cookieParser = require("cookie-parser");
+const path = require('path');
 
 const PORT = 5000;
 const api = '/api';
@@ -24,6 +25,8 @@ app.use(api, servicesRouter);
 app.use(api, authRouter);
 app.use(api, usersRouter);
 app.use(api, slidersRouter);
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
 app.listen(PORT, ()=> console.log('Server is running on port ' + PORT));

@@ -21,7 +21,7 @@ const authController = {
       const accessToken = jwt.sign(
         { id: user.id, login: user.login },
         process.env.JWT_SECRET,
-        { expiresIn: "15m" }
+        { expiresIn: "2m" }
       );
 
       // Refresh token
