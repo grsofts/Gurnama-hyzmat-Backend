@@ -66,6 +66,20 @@ const authController = {
       return res.status(500).json({ message: "Ошибка сервера" });
     }
   },
+  //check login isset with access token
+  Me: async (req, res) => {
+    try {
+
+      const user = await models.User.findOne({ where: { id: req.user.id, is_active: true } });
+      if (!user) return res.status(404).json({ message: "Пользователь не найден" });
+
+      return res.json({ id: user.id, username: user.login, name: user.name });
+
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Ошибка сервера" });
+    }
+  },
   Register: async (req, res) => {
     try {
       const { login, name, password, is_active } = req.body;
