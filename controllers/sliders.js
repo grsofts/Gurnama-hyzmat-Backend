@@ -200,6 +200,28 @@ const sliderController = {
       res.status(500).json({ error: 'Server error' });
     }
   },
+  updateSliderStatus: async (req, res) => {
+    try {
+      const sliderId = req.params.id;
+      const status = req.query.status;
+  
+      const slider = await models.Slider.findByPk(sliderId);
+
+      if (!slider) return res.status(404).json({ message: 'Slider not found' });
+
+      // 3. Обновляем статус
+      await slider.update({
+        is_active: status
+      });
+
+      res.json({ message: 'Slider status updated' });
+
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  },  
+
   deleteSlider: async (req, res) => {
     try {
       const sliderId = req.params.id;

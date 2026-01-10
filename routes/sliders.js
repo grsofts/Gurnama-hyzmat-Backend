@@ -13,6 +13,7 @@ router.get('/sliders/:id', sliderController.getSliders);
 router.put('/update_slider/:id', 
     multer.fields([{name:'image_tm', maxCount: 1 }, {name:'image_ru', maxCount: 1 }, {name:'image_en', maxCount: 1 }]),
     sliderController.updateSlider);
+router.put('/slider_status/:id', verify, sliderController.updateSliderStatus)
 router.delete('/delete_slider/:id', sliderController.deleteSlider);
 
 
