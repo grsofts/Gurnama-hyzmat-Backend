@@ -6,43 +6,76 @@ const path = require('path');
 const sliderController = {
   getSliders: async (req, res) => {
     try {
-        // ?lang=ru или default 'ru'
-        const lang = req.query.lang || 'ru';
-        const language = await models.Language.findOne({ where: { code: lang }});
-        const languageId = language ? language.id : 1;
         const id = req.params.id;
+        const lang = req.query.lang || 'ru';
+
+        // Базовый конфиг для include
+        let translationInclude = {
+            model: models.SliderTranslation,
+            as: 'translations',
+            required: false,
+            // Исключаем ненужные поля на уровне БД
+            attributes: { exclude: ['createdAt', 'updatedAt', 'language_id'] }
+        };
+
+        // Если запрашиваем один ID, нам нужны коды языков для ключей объекта
+        if (id) {
+            translationInclude.include = [{
+                model: models.Language,
+                as: 'language', // убедитесь, что в моделях прописана связь SliderTranslation.belongsTo(models.Language)
+                attributes: ['code']
+            }];
+        } else {
+            // Если общий список — фильтруем по конкретному языку
+            const language = await models.Language.findOne({ where: { code: lang } });
+            translationInclude.where = { language_id: language ? language.id : 1 };
+        }
 
         const sliders = await models.Slider.findAll({
-          order: [['sort_order', 'ASC']],
-          where: id ? { id: id } : {},
-          include: [{
-              model: models.SliderTranslation,
-              as: 'translations',
-              where: { language_id: languageId },
-              required: false
-          }]
+            order: [['sort_order', 'ASC']],
+            where: id ? { id: id } : {},
+            include: [translationInclude]
         });
 
-        // map: вернуть удобный объект с translation
         const result = sliders.map(s => {
-          const t = s.translations && s.translations[0];
-          
-          return {
-              id: s.id,
-              sort_order: s.sort_order,
-              name: t ? t.name : null,
-              title: t ? t.title : null,
-              desc: t ? t.desc : null,
-              image: t.image,
-              link: s.link,
-              is_custom_link: s.isCustomLink,
-              is_active: s.is_active,
-              createdAt: s.createdAt,
-              updatedAt: s.updatedAt
-          };
+            const baseData = {
+                id: s.id,
+                sort_order: s.sort_order,
+                link: s.link,
+                is_custom_link: s.isCustomLink,
+                is_active: s.is_active,
+                createdAt: s.createdAt,
+                updatedAt: s.updatedAt
+            };
+
+            if (id) {
+                // Превращаем массив в объект { ru: {}, tm: {}, en: {} }
+                const translationsObject = {};
+                s.translations.forEach(t => {
+                    const code = t.language ? t.language.code : 'unknown';
+                    translationsObject[code] = {
+                        name: t.name,
+                        title: t.title,
+                        desc: t.desc,
+                        image: t.image
+                    };
+                });
+                
+                return { ...baseData, translations: translationsObject };
+            }
+
+            // Для общего списка (один язык) возвращаем плоскую структуру
+            const t = s.translations && s.translations[0];
+            return {
+                ...baseData,
+                name: t ? t.name : null,
+                title: t ? t.title : null,
+                desc: t ? t.desc : null,
+                image: t ? t.image : null
+            };
         });
 
-        res.status(result.length > 0 ? 200 : 404).json(result);
+        res.status(result.length > 0 ? 200 : 404).json(id ? result[0] : result);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Server error' });
@@ -143,6 +176,8 @@ const sliderController = {
       });
 
       if (!slider) return res.status(404).json({ message: 'Slider not found' });
+      console.log(data);
+      
 
       // 3. Обновляем основные поля
       await slider.update({

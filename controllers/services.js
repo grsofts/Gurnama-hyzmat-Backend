@@ -4,51 +4,84 @@ const fs = require('fs');
 const path = require('path');
 
 const serviceController = {
-  getServices: async (req, res) => {
-    try {
-        // ?lang=ru или default 'ru'
-        const lang = req.query.lang || 'ru';
-        const language = await models.Language.findOne({ where: { code: lang }});
-        const languageId = language ? language.id : 1;
-        const id = req.params.id;
+ getServices: async (req, res) => {
+  try {
+    const id = req.params.id;
+    const lang = req.query.lang || 'ru';
 
-        const services = await models.Service.findAll({
-          order: [['sort_order', 'ASC']],
-          where: id ? { id: id } : {},
-          include: [{
-              model: models.ServiceTranslation,
-              as: 'translations',
-              where: { language_id: languageId },
-              required: false
-          }]
-        });
+    let translationInclude = {
+      model: models.ServiceTranslation,
+      as: 'translations',
+      required: false,
+      attributes: { exclude: ['createdAt', 'updatedAt', 'language_id'] }
+    };
 
-        // map: вернуть удобный объект с translation
-        const result = services.map(s => {
-          const t = s.translations && s.translations[0];
-          
-          return id ? {
-              id: s.id,
-              sort_order: s.sort_order,
-              title: t ? t.title : null,
-              short_desc: t ? t.short_desc : null,
-              full_desc: id ? t.full_desc : null,
-              image: t.image,
-          } : {
-              id: s.id,
-              sort_order: s.sort_order,
-              title: t ? t.title : null,
-              short_desc: t ? t.short_desc : null,
-              image: t.image,
+    if (id) {
+      // Для одного сервиса — нужны коды языков
+      translationInclude.include = [{
+        model: models.Language,
+        as: 'language',
+        attributes: ['code']
+      }];
+    } else {
+      // Для списка — только один язык
+      const language = await models.Language.findOne({ where: { code: lang } });
+      translationInclude.where = { language_id: language ? language.id : 1 };
+    }
+
+    const services = await models.Service.findAll({
+      order: [['sort_order', 'ASC']],
+      where: id ? { id } : {},
+      include: [translationInclude]
+    });
+
+    const result = services.map(s => {
+      const baseData = {
+        id: s.id,
+        sort_order: s.sort_order,
+        is_active: s.is_active,
+        image: s.image,
+        createdAt: s.createdAt
+      };
+
+      // ====== ONE SERVICE (EDIT MODE) ======
+      if (id) {
+        const translations = {};
+
+        s.translations.forEach(t => {
+          const code = t.language?.code || 'unknown';
+          translations[code] = {
+            title: t.title,
+            short_desc: t.short_desc,
+            full_desc: t.full_desc,
+            image: t.image
           };
         });
 
-        res.status(result.length > 0 ? 200 : 404).json(result);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Server error' });
-    }
-  },
+        return {
+          ...baseData,
+          translations
+        };
+      }
+
+      // ====== LIST MODE ======
+      const t = s.translations?.[0];
+
+      return {
+        ...baseData,
+        title: t?.title || null,
+        short_desc: t?.short_desc || null
+      };
+    });
+
+    res.status(result.length ? 200 : 404).json(id ? result[0] : result);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+},
+
   addService: async (req, res) => {
     try {
       // 1. Парсим JSON
