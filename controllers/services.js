@@ -4,84 +4,84 @@ const fs = require('fs');
 const path = require('path');
 
 const serviceController = {
- getServices: async (req, res) => {
-  try {
-    const id = req.params.id;
-    const lang = req.query.lang || 'ru';
+  getServices: async (req, res) => {
+    try {
+      const id = req.params.id;
+      const lang = req.query.lang || 'ru';
 
-    let translationInclude = {
-      model: models.ServiceTranslation,
-      as: 'translations',
-      required: false,
-      attributes: { exclude: ['createdAt', 'updatedAt', 'language_id'] }
-    };
-
-    if (id) {
-      // Для одного сервиса — нужны коды языков
-      translationInclude.include = [{
-        model: models.Language,
-        as: 'language',
-        attributes: ['code']
-      }];
-    } else {
-      // Для списка — только один язык
-      const language = await models.Language.findOne({ where: { code: lang } });
-      translationInclude.where = { language_id: language ? language.id : 1 };
-    }
-
-    const services = await models.Service.findAll({
-      order: [['sort_order', 'ASC']],
-      where: id ? { id } : {},
-      include: [translationInclude]
-    });
-
-    const result = services.map(s => {
-      const baseData = {
-        id: s.id,
-        sort_order: s.sort_order,
-        is_active: s.is_active,
-        image: s.image,
-        createdAt: s.createdAt
+      let translationInclude = {
+        model: models.ServiceTranslation,
+        as: 'translations',
+        required: false,
+        attributes: { exclude: ['createdAt', 'updatedAt', 'language_id'] }
       };
 
-      // ====== ONE SERVICE (EDIT MODE) ======
       if (id) {
-        const translations = {};
+        // Для одного сервиса — нужны коды языков
+        translationInclude.include = [{
+          model: models.Language,
+          as: 'language',
+          attributes: ['code']
+        }];
+      } else {
+        // Для списка — только один язык
+        const language = await models.Language.findOne({ where: { code: lang } });
+        translationInclude.where = { language_id: language ? language.id : 1 };
+      }
 
-        s.translations.forEach(t => {
-          const code = t.language?.code || 'unknown';
-          translations[code] = {
-            title: t.title,
-            short_desc: t.short_desc,
-            full_desc: t.full_desc,
-            image: t.image
+      const services = await models.Service.findAll({
+        order: [['sort_order', 'ASC']],
+        where: id ? { id } : {},
+        include: [translationInclude]
+      });
+
+      const result = services.map(s => {
+        const baseData = {
+          id: s.id,
+          sort_order: s.sort_order,
+          is_active: s.is_active,
+          image: s.image,
+          createdAt: s.createdAt
+        };
+
+        // ====== ONE SERVICE (EDIT MODE) ======
+        if (id) {
+          const translations = {};
+
+          s.translations.forEach(t => {
+            const code = t.language?.code || 'unknown';
+            translations[code] = {
+              title: t.title,
+              short_desc: t.short_desc,
+              full_desc: t.full_desc,
+              image: t.image
+            };
+          });
+
+          return {
+            ...baseData,
+            translations
           };
-        });
+        }
+
+        // ====== LIST MODE ======
+        const t = s.translations?.[0];
 
         return {
           ...baseData,
-          translations
+          title: t?.title || null,
+          short_desc: t?.short_desc || null,
+          image: t?.image || null
         };
-      }
+      });
 
-      // ====== LIST MODE ======
-      const t = s.translations?.[0];
+      res.status(result.length ? 200 : 404).json(id ? result[0] : result);
 
-      return {
-        ...baseData,
-        title: t?.title || null,
-        short_desc: t?.short_desc || null
-      };
-    });
-
-    res.status(result.length ? 200 : 404).json(id ? result[0] : result);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  }
-},
-
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  },
   addService: async (req, res) => {
     try {
       // 1. Парсим JSON
@@ -126,7 +126,7 @@ const serviceController = {
           language_id: langRow.id,
           title: tr.title,
           short_desc: tr.short_desc,
-          full_desc: tr.full_desc,
+          full_desc: tr.desc,
           image: files[`image_${lang}`]?.[0]?.filename ? '/services/' + files[`image_${lang}`]?.[0]?.filename : null
         });
       }
@@ -148,6 +148,8 @@ const serviceController = {
       }
 
       const data = JSON.parse(req.body.data);
+      console.log(data);
+      
 
       // 2. Находим существующую услугу
       const service = await models.Service.findByPk(serviceId, {
@@ -183,14 +185,14 @@ const serviceController = {
             language_id: langRow.id,
             title: tr.title,
             short_desc: tr.short_desc,
-            full_desc: tr.full_desc,
+            full_desc: tr.desc,
             image: null
           });
         } else {
           await translation.update({
             title: tr.title,
             short_desc: tr.short_desc,
-            full_desc: tr.full_desc
+            full_desc: tr.desc
           });
         }
 
@@ -205,6 +207,25 @@ const serviceController = {
 
       res.json({ message: 'Service updated' });
 
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  },
+  updateServiceStatus: async (req, res) => {
+    try {
+      const serviceId = req.params.id;
+      const is_active = req.query.status === 'true';
+
+      // Находим существующую услугу
+      const service = await models.Service.findByPk(serviceId);
+
+      if (!service) return res.status(404).json({ message: 'Service not found' });
+
+      // Обновляем статус
+      await service.update({ is_active });
+
+      res.json({ message: 'Service status updated' });
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: 'Server error' });

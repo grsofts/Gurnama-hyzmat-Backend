@@ -16,6 +16,11 @@ defineModel('user.js');
 defineModel('refreshToken.js');
 defineModel('slider.js');
 defineModel('sliderTranslation.js');
+defineModel('project.js');
+defineModel('projectTranslation.js');
+defineModel('projectImages.js');
+defineModel('certificate.js');
+defineModel('partner.js');
 
 // Прокинь ассоциации (если определены)
 Object.keys(models).forEach(name => {

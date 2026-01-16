@@ -15,8 +15,12 @@ app.use(cors({
 
 const servicesRouter = require('./routes/services.js');
 const authRouter = require('./routes/auth.js');
+const certificatesRouter = require('./routes/certificates.js');
 const slidersRouter = require('./routes/sliders.js');
 const usersRouter = require('./routes/users.js');
+const projectsRouter = require('./routes/projects.js');
+const partnersRouter = require('./routes/partners.js');
+
 app.use(express.json());
 app.use(cookieParser());
 
@@ -25,6 +29,9 @@ app.use(api, servicesRouter);
 app.use(api, authRouter);
 app.use(api, usersRouter);
 app.use(api, slidersRouter);
+app.use(api, certificatesRouter);
+app.use(api, projectsRouter);
+app.use(api, partnersRouter);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
