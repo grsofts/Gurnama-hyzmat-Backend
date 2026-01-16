@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const partnerController = require('../controllers/partnerController');
+const partnerController = require('../controllers/partners');
 const verify = require('../middleware/verify');
 const validateUpload = require('../middleware/validateUpload');
 const createUploader = require('../middleware/uploadFactory');
