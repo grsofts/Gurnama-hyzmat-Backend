@@ -95,6 +95,7 @@ const projectController = {
         is_active: data.is_active ?? true,
         client_name: data.client_name,
         address: data.address,
+        rate: data.rate,
         completed: data.completed,
         tags: data.tags
       });
