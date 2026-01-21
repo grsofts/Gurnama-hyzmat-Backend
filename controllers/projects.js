@@ -87,7 +87,7 @@ const projectController = {
     try {
       if (!req.body.data) return res.status(400).json({ message: "Missing 'data' JSON field" });
       const data = JSON.parse(req.body.data);
-      const files = req.files || {};
+      const files = req.files || [];
 
       // 1. Создаем проект
       const project = await models.Project.create({
@@ -117,8 +117,8 @@ const projectController = {
       }
 
       // 3. Сохраняем изображения
-      if (files.images) {
-        for (const file of files.images) {
+      if (files.length > 0) {
+        for (const file of files) {
           const newPath = path.join(__dirname, '../uploads/projects', file.filename);
           fs.renameSync(file.path, newPath);
 

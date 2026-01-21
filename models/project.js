@@ -14,7 +14,8 @@ module.exports = (sequelize) => {
   });
 
   Project.associate = (models) => {
-    Project.hasMany(models.ProjectTranslation, { as: 'translations', foreignKey: 'project_id' });
+    Project.hasMany(models.ProjectTranslation, { as: 'translations', foreignKey: 'project_id', onDelete: 'CASCADE' });
+    Project.hasMany(models.ProjectImages, { as: 'images', foreignKey: 'project_id', onDelete: 'CASCADE' });
   };
 
   return Project;
