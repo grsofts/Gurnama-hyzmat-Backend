@@ -8,6 +8,7 @@ const sliderController = {
     try {
         const id = req.params.id;
         const lang = req.query.lang || 'ru';
+        // const isSiteRequest = req.query.site === 'true';
 
         // Базовый конфиг для include
         let translationInclude = {

@@ -13,8 +13,8 @@ const multer = createUploader({
 });
 
 // ================= GET =================
-router.get('/certificates', verify, certificateController.getCertificates);
-router.get('/certificates/:id', verify, certificateController.getCertificates);
+router.get('/certificates', certificateController.getCertificates);
+router.get('/certificates/:id', certificateController.getCertificates);
 
 // ================= ADD =================
 router.post(

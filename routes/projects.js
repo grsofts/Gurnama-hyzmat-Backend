@@ -9,8 +9,8 @@ const createUploader = require('../middleware/uploadFactory');
 const multer = createUploader({ folder: 'projects', prefix: 'project' });
 
 // ================= GET =================
-router.get('/projects', verify, projectController.getProjects);
-router.get('/projects/:id', verify, projectController.getProjects);
+router.get('/projects', projectController.getProjects);
+router.get('/projects/:id', projectController.getProjects);
 
 // ================= ADD =================
 router.post(

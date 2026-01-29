@@ -77,6 +77,23 @@ const userController = {
             console.error(err);
             res.status(500).json({ error: 'Server error' });
         }
+    },
+    deleteUser: async (req, res) => {
+        try {
+            const id = req.params.id;
+
+            const user = await models.User.findByPk(id);
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+
+            await user.destroy();
+
+            res.status(200).json({ message: 'User deleted successfully' });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Server error' });
+        }
     }
 };
 

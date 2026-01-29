@@ -6,19 +6,19 @@ const validateUpload = require('../middleware/validateUpload');
 const createUploader = require('../middleware/uploadFactory');
 const multer = createUploader({ folder: 'sliders', prefix: 'slider' });
 
-router.get('/sliders', verify, sliderController.getSliders);
+router.get('/sliders', sliderController.getSliders);
 router.get('/sliders/:id', sliderController.getSliders);
-    router.post('/add_slider', 
+    router.post('/add_slider', verify,
     multer.fields([{name:'image_tm', maxCount: 1 }, {name:'image_ru', maxCount: 1 }, {name:'image_en', maxCount: 1 }]),
     validateUpload({ allowedTypes: ['image/jpeg', 'image/png'], maxSize: 10 * 1024 * 1024 }),
     sliderController.addSlider);
 
-router.put('/update_slider/:id', 
+router.put('/update_slider/:id', verify,
     multer.fields([{name:'image_tm', maxCount: 1 }, {name:'image_ru', maxCount: 1 }, {name:'image_en', maxCount: 1 }]),
     validateUpload({ allowedTypes: ['image/jpeg', 'image/png'], maxSize: 10 * 1024 * 1024 }),
     sliderController.updateSlider);
-router.put('/slider_status/:id', verify, sliderController.updateSliderStatus)
-router.delete('/delete_slider/:id', sliderController.deleteSlider);
+router.put('/slider_status/:id', verify, sliderController.updateSliderStatus);
+router.delete('/delete_slider/:id', verify, sliderController.deleteSlider);
 
 
 module.exports = router;

@@ -9,8 +9,8 @@ const createUploader = require('../middleware/uploadFactory');
 const multer = createUploader({ folder: 'partners', prefix: 'partner' });
 
 // ================= GET =================
-router.get('/partners', verify, partnerController.getPartners);
-router.get('/partners/:id', verify, partnerController.getPartners);
+router.get('/partners', partnerController.getPartners);
+router.get('/partners/:id', partnerController.getPartners);
 
 // ================= ADD =================
 router.post(

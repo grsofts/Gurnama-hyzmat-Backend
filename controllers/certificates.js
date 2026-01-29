@@ -38,9 +38,6 @@ const certificateController = {
 
       const data = JSON.parse(req.body.data);
 
-      console.log(data);
-      
-
       if (!req.file) {
         return res.status(400).json({ message: 'Certificate image is required' });
       }

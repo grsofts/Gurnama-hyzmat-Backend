@@ -21,6 +21,8 @@ defineModel('projectTranslation.js');
 defineModel('projectImages.js');
 defineModel('certificate.js');
 defineModel('partner.js');
+defineModel('about.js');
+defineModel('contact.js');
 
 // Прокинь ассоциации (если определены)
 Object.keys(models).forEach(name => {

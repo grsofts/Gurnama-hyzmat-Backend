@@ -20,6 +20,8 @@ const slidersRouter = require('./routes/sliders.js');
 const usersRouter = require('./routes/users.js');
 const projectsRouter = require('./routes/projects.js');
 const partnersRouter = require('./routes/partners.js');
+const aboutRouter = require('./routes/about.js');
+const contactsRouter = require('./routes/contacts.js');
 
 app.use(express.json());
 app.use(cookieParser());
@@ -32,6 +34,8 @@ app.use(api, slidersRouter);
 app.use(api, certificatesRouter);
 app.use(api, projectsRouter);
 app.use(api, partnersRouter);
+app.use(api, aboutRouter);
+app.use(api, contactsRouter);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
