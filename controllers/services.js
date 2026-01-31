@@ -8,6 +8,7 @@ const serviceController = {
     try {
       const id = req.params.id;
       const lang = req.query.lang || 'ru';
+      const isSiteRequest = req.query.site === 'true';
 
       let translationInclude = {
         model: models.ServiceTranslation,
@@ -32,6 +33,7 @@ const serviceController = {
       const services = await models.Service.findAll({
         order: [['sort_order', 'ASC']],
         where: id ? { id } : {},
+        ...(isSiteRequest ? { where: { is_active: true } } : {}),
         include: [translationInclude]
       });
 

@@ -8,9 +8,13 @@ const partnerController = {
   getPartners: async (req, res) => {
     try {
       const id = req.params.id;
+      const isSiteRequest = req.query.site === 'true';
 
       const partners = await models.Partner.findAll({
-        where: id ? { id } : {},
+        where: {
+          ...(id ? { id } : {}),
+          ...(isSiteRequest ? { is_active: true } : {}),
+        },
         order: [['sort_order', 'ASC']]
       });
 

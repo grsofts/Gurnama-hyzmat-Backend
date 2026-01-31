@@ -8,7 +8,7 @@ const sliderController = {
     try {
         const id = req.params.id;
         const lang = req.query.lang || 'ru';
-        // const isSiteRequest = req.query.site === 'true';
+        const isSiteRequest = req.query.site === 'true';
 
         // Базовый конфиг для include
         let translationInclude = {
@@ -34,7 +34,10 @@ const sliderController = {
 
         const sliders = await models.Slider.findAll({
             order: [['sort_order', 'ASC']],
-            where: id ? { id: id } : {},
+            where: {
+                ...(id ? { id } : {}),
+                ...(isSiteRequest ? { is_active: true } : {}),
+            },
             include: [translationInclude]
         });
 

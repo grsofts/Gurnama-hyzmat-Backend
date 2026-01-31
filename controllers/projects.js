@@ -9,6 +9,7 @@ const projectController = {
     try {
       const id = req.params.id;
       const lang = req.query.lang || 'ru';
+      const isSiteRequest = req.query.site === 'true';
 
       // включаем переводы
       const translationInclude = {
@@ -25,6 +26,7 @@ const projectController = {
 
       const projects = await models.Project.findAll({
         where: id ? { id } : {},
+        ...(isSiteRequest ? { where: { is_active: true } } : {}),
         include: [
           translationInclude,
           { model: models.ProjectImages, as: 'images' }

@@ -1,6 +1,6 @@
 const models = require('../models');
 
-const About = {
+const aboutController = {
   getAbout: async (req, res) => {
     try {
       const about = await models.About.findAll();
@@ -88,4 +88,4 @@ const About = {
 }
 
 
-module.exports = About;
+module.exports = aboutController;

@@ -1,6 +1,7 @@
 const models = require('../models');
 const fs = require('fs');
 const path = require('path');
+const { where } = require('sequelize');
 
 const certificateController = {
 
@@ -8,9 +9,13 @@ const certificateController = {
   getCertificates: async (req, res) => {
     try {
       const id = req.params.id;
+      const isSiteRequest = req.query.site === 'true';
 
       const certificates = await models.Certificate.findAll({
-        where: id ? { id } : {},
+        where: {
+          ...(id ? { id } : {}),
+          ...(isSiteRequest ? { is_active: true } : {}),
+        },
         order: [['createdAt', 'DESC']]
       });
 

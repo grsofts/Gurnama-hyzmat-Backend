@@ -22,6 +22,7 @@ defineModel('projectImages.js');
 defineModel('certificate.js');
 defineModel('partner.js');
 defineModel('about.js');
+defineModel('aboutTranslation.js');
 defineModel('contact.js');
 
 // Прокинь ассоциации (если определены)
