@@ -29,6 +29,7 @@ const contactController = {
                 key: data.key,
                 value: data.value,
                 type: data.type,
+                link: data.link,
                 icon: `/contacts/${icon.filename}`,
             });
             res.status(201).json({ message: 'Contact created', id: contact.id });
@@ -59,6 +60,7 @@ const contactController = {
                 key: data.key,
                 value: data.value,
                 type: data.type,
+                link: data.link,
                 icon: icon ? `/contacts/${icon.filename}` : contact.icon,
             });
             res.json({ message: 'Contact updated', id: contact.id });
