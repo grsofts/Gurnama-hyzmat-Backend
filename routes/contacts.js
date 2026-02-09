@@ -13,7 +13,7 @@ const multer = createUploader({
 
 router.get('/contacts', contactController.getContacts);
 router.post('/add_contact', verify, multer.single('icon'), contactController.addContact);
-router.put('/update_contact', verify, multer.single('icon'), contactController.updateContact);
+router.put('/update_contact/:id', verify, multer.single('icon'), contactController.updateContact);
 router.delete('/delete_contact/:id', verify, contactController.deleteContact);
 
 module.exports = router;

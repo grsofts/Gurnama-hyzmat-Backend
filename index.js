@@ -9,7 +9,11 @@ const app = express();
 
 // Разрешаем все origins (для разработки)
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: [
+        'http://localhost:5173',
+        'http://localhost:3005',
+        'http://192.168.0.34:3005/'
+    ],
     credentials: true
 }));
 
