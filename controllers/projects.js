@@ -45,6 +45,7 @@ const projectController = {
           address: p.address,
           completed: p.completed,
           tags: p.tags,
+          rate: p.rate,
           images: p.images.map(img => ({
             id: img.id,
             sort_order: img.sort_order,
@@ -118,6 +119,7 @@ const projectController = {
         }
       }
 
+      
       // 3. Сохраняем изображения
       if (files.length > 0) {
         for (const file of files) {
@@ -149,6 +151,8 @@ const projectController = {
 
       const data = JSON.parse(req.body.data);
       const files = req.files || {};
+      const removedImages = data.removed_images || [];
+
 
       const project = await models.Project.findByPk(projectId, {
         include: [
@@ -165,6 +169,7 @@ const projectController = {
         client_name: data.client_name,
         address: data.address,
         completed: data.completed,
+        rate: data.rate,
         tags: data.tags
       });
 
@@ -193,9 +198,25 @@ const projectController = {
         }
       }
 
+      if(removedImages.length > 0){
+        for (const img of removedImages) {
+          const filePath = path.join(__dirname, '../uploads', img.url);
+          
+          // удалить файл
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+
+          // удалить запись из БД
+          await models.ProjectImages.destroy({where:{id : img.id}});
+        }
+      }
+      
+
       // 3. Добавляем новые изображения
-      if (files.images) {
-        for (const file of files.images) {
+      if (files.length > 0) {
+        for (const file of files) {
+          
           const newPath = path.join(__dirname, '../uploads/projects', file.filename);
           fs.renameSync(file.path, newPath);
 

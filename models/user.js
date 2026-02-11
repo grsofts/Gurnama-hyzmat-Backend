@@ -10,5 +10,13 @@ module.exports = (sequelize) => {
     tableName: 'users'
   });
 
+  User.associate = (models) => {
+    User.hasMany(models.RefreshToken, {
+      foreignKey: 'user_id',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE'
+    });
+  };
+
   return User;
 };

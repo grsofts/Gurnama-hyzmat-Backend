@@ -28,7 +28,7 @@ router.post(
 router.put(
   '/update_project/:id',
   verify,
-  multer.array('images'),
+  multer.array('images', 5),
   validateUpload({
     allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
     maxSize: 10 * 1024 * 1024

@@ -35,7 +35,7 @@ const userController = {
             const id = req.params.id;
             const { name, is_active, password } = req.body;
 
-            const isAdmin = req.user?.login === 'admin';
+            const isAdmin = req.query.who === 'admin';
 
             const user = await models.User.findByPk(id);
             if (!user) {
@@ -44,11 +44,11 @@ const userController = {
 
             // обычные поля
             if (name !== undefined) {
-            user.name = name;
+                user.name = name;
             }
 
             if (is_active !== undefined) {
-            user.is_active = is_active;
+                user.is_active = user.login === 'admin' ? true : is_active;
             }
 
             // 🔐 пароль — ТОЛЬКО для админа

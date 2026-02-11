@@ -5,7 +5,7 @@ module.exports = (sequelize) => {
     language_id: { type: DataTypes.INTEGER, allowNull: false },
     footer_text: { type: DataTypes.STRING, allowNull: false },
     short_text: { type: DataTypes.STRING, allowNull: false },
-    full_text: { type: DataTypes.STRING, allowNull: false },
+    full_text: { type: DataTypes.TEXT, allowNull: false },
   }, {
     tableName: 'about_translations'
   });

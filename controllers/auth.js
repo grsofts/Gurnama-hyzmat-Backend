@@ -11,7 +11,7 @@ const authController = {
 
       if (!login || !password) return res.status(400).json({ message: "Введите логин и пароль" });
 
-      const user = await models.User.findOne({ where: { login } });
+      const user = await models.User.findOne({ where: { login:login, is_active:true } });
       if (!user) return res.status(404).json({ message: "Пользователь не найден" });
 
       const isMatch = await bcrypt.compare(password, user.password);

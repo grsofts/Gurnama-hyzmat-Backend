@@ -9,10 +9,14 @@ module.exports = (sequelize) => {
   },{
     tableName : "refresh_tokens",
   });
-
-//   RefreshToken.associate = (models) => {
-//     RefreshToken.belongsTo(models.User, { foreignKey: "id" });
-//   };
+  
+  RefreshToken.associate = (models) => {
+    RefreshToken.belongsTo(models.User, {
+      foreignKey: 'user_id',
+      onDelete: 'CASCADE',
+      onUpdate: 'CASCADE'
+    });
+  };
 
   return RefreshToken;
 };
