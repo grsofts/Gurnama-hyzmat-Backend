@@ -5,6 +5,7 @@ module.exports = (sequelize) => {
       is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
       sort_order: { type: DataTypes.INTEGER, defaultValue: 0 },
       name: { type: DataTypes.STRING, allowNull: false },
+      link: { type: DataTypes.STRING, allowNull: true },
       image: { type: DataTypes.STRING, allowNull: false }
   }, {
     tableName: 'partners'

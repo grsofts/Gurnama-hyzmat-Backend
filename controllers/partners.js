@@ -40,7 +40,8 @@ const partnerController = {
         name: data.name,
         sort_order: data.sort_order ?? 0,
         is_active: data.is_active ?? true,
-        image: `/partners/${req.file.filename}`
+        image: `/partners/${req.file.filename}`,
+        link: data.link
       });
 
       res.json({ message: 'Partner created', id: partner.id });
@@ -66,7 +67,8 @@ const partnerController = {
       await partner.update({
         name: data.name,
         sort_order: data.sort_order ?? partner.sort_order,
-        is_active: data.is_active ?? partner.is_active
+        is_active: data.is_active ?? partner.is_active,
+        link: data.link
       });
 
       // если пришёл новый файл — заменяем старый

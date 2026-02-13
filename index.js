@@ -26,6 +26,7 @@ const projectsRouter = require('./routes/projects.js');
 const partnersRouter = require('./routes/partners.js');
 const aboutRouter = require('./routes/about.js');
 const contactsRouter = require('./routes/contacts.js');
+const mailRouter = require('./routes/mail.js')
 
 app.use(express.json());
 app.use(cookieParser());
@@ -40,8 +41,10 @@ app.use(api, projectsRouter);
 app.use(api, partnersRouter);
 app.use(api, aboutRouter);
 app.use(api, contactsRouter);
+app.use(api, mailRouter);
+
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
-app.listen(PORT, ()=> console.log('Server is running on port ' + PORT));
+app.listen(PORT,'0.0.0.0',()=> console.log('Server is running on port ' + PORT));
